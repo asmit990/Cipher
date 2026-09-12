@@ -1,0 +1,25 @@
+{
+  "name": "Cautiouer",
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+  "dev": "turbo dev",
+  "build": "turbo build"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "^11.1.1",
+      "onFail": "download"
+    }
+  },
+  "type": "module",
+  "devDependencies": {
+    "turbo": "^2.10.12"
+  }
+}
