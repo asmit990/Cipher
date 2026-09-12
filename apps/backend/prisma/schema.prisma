@@ -1,0 +1,85 @@
+// schema.prisma
+
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Customer {
+  id          String    @id @default(uuid())
+  name        String
+  email       String    @unique
+  createdAt   DateTime  @default(now())
+
+  subscriptions Subscription[]
+  payments      Payment[]
+  tickets       SupportTicket[]
+
+  @@map("customers")
+}
+
+model Subscription {
+  id          String    @id @default(uuid())
+  customerId  String
+  customer    Customer  @relation(fields: [customerId], references: [id])
+  status      String    // active | inactive | cancelled | past_due
+  plan        String
+  createdAt   DateTime  @default(now())
+
+  @@map("subscriptions")
+}
+
+model Payment {
+  id          String    @id @default(uuid())
+  customerId  String
+  customer    Customer  @relation(fields: [customerId], references: [id])
+  amount      Int       // cents
+  status      String    // succeeded | failed | pending
+  createdAt   DateTime  @default(now())
+
+  @@map("payments")
+}
+
+model SupportTicket {
+  id               String    @id @default(uuid())
+  customerId       String
+  customer         Customer  @relation(fields: [customerId], references: [id])
+  zendeskTicketId  String    @unique
+  subject          String
+  status           String    // open | investigating | resolved
+  createdAt        DateTime  @default(now())
+
+  investigations   Investigation[]
+
+  @@map("support_tickets")
+}
+
+model Investigation {
+  id                  String    @id @default(uuid())
+  ticketId            String
+  ticket              SupportTicket @relation(fields: [ticketId], references: [id])
+  status              String    // running | completed | failed
+  rootCause           String?
+  evidence            Json?
+  recommendedAction   String?
+  createdAt           DateTime  @default(now())
+
+  agentRuns           AgentRun[]
+
+  @@map("investigations")
+}
+
+model AgentRun {
+  id               String    @id @default(uuid())
+  investigationId  String
+  investigation    Investigation @relation(fields: [investigationId], references: [id])
+  toolCalls        Json      // array of {tool, input, output, latencyMs}
+  latencyMs        Int?
+  costUsd          Float?
+  createdAt        DateTime  @default(now())
+
+  @@map("agent_runs")
+}
