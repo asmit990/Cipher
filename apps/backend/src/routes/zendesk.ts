@@ -58,4 +58,12 @@ r.post('/webhooks/zendesk', async (req, res) => {
             status: ticket.status ?? 'open',
         },
     })
+
+
+    res.status(200).json({ received: true, ticketId: savedTicket.id });
+
 })
+
+
+
+export default r;
