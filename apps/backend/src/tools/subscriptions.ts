@@ -4,16 +4,11 @@ import { prisma } from "../lib/prisma.js"
 
 
 export async function getSubscription(customerId: string) {
-
-    const subscription = await prisma.subscription.findMany({
+    const subscription = await prisma.subscription.findFirst({
         where: { customerId },
-        include: {
-
-        },
         orderBy: {
             createdAt: 'desc',
         },
-
     });
 
     return subscription;
