@@ -50,7 +50,7 @@ export async function investigate(ticket: Ticket, customer: Customer) {
         });
     }
 
-    // Structured output: summarize findings into JSON
+
     const finalResponse = await genai.models.generateContent({
         model: 'gemini-2.5-flash',
         contents: [
@@ -66,7 +66,7 @@ export async function investigate(ticket: Ticket, customer: Customer) {
 
     const result = JSON.parse(finalResponse.text ?? '{}');
 
-    // Persist the investigation result
+
     await prisma.investigation.create({
         data: {
             ticketId: ticket.id,
