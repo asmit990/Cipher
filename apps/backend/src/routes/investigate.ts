@@ -1,5 +1,5 @@
 import { investigate } from "../agents/investigate.js";
-import { Router } from "express"
+import { Router, type NextFunction } from "express"
 import { type Response, type Request } from "express";
 import { prisma } from "../lib/prisma.js";
 
@@ -33,17 +33,23 @@ r.post('/:id/investigate', async (req: Request, res: Response) => {
 
 
 
-r.get('/:id', async (req: Request, res: Response) => {
-    const investigateId = req.params.id as string;
-    if (!investigateId) return res.status(401).json({ status: "not ok", message: "error there is no investigate" })
+r.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const investigateId = req.params.id as string;
+        if (!investigateId) return res.status(401).json({ status: "not ok", message: "error there is no investigate" })
 
-    const investigation = await prisma.investigation.findUnique({
-        where: { id: investigateId },
-    })
+        const investigation = await prisma.investigation.findUnique({
+            where: { id: investigateId },
+        })
 
-    if (!investigation) return res.status(404).json({ status: "not ok", message: "error there is no investigate" })
+        if (!investigation) return res.status(404).json({ status: "not ok", message: "error there is no investigate" })
 
-    res.status(200).json({ status: "ok", investigation });
+        res.status(200).json({ status: "ok", investigation });
+    } catch (err) {
+
+        console.error("error fetching investigation", err)
+        next(err);
+    }
 
 })
 export default r;

@@ -2,8 +2,11 @@ import { Router } from 'express';
 import { prisma } from '../lib/prisma.js';
 import { verifyZendeskSignature } from '../lib/verifyZendesk.js';
 import { getZendeskUser } from '../lib/zenDesk.js';
+import { investigationQueue } from '../queue/investigateQueue.js';
 
-export const r: Router = Router();
+
+
+const r: Router = Router();
 
 
 r.post('/webhooks/zendesk', async (req, res) => {
@@ -58,6 +61,9 @@ r.post('/webhooks/zendesk', async (req, res) => {
             status: ticket.status ?? 'open',
         },
     })
+
+
+    await investigationQueue.add('investiagte-ticket', { ticketId: savedTicket.id })
 
 
     res.status(200).json({ received: true, ticketId: savedTicket.id });
