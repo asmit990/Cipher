@@ -3,6 +3,8 @@ import { genai } from '../lib/gemini.js';
 import { prisma } from '../lib/prisma.js';
 import { toolDeclarations, toolMap } from './tool.js';
 import { investigationResponseSchema } from './schema.js';
+import { sendSlackMessage } from '../lib/slack.js';
+import { formatInvestigationMessage } from '../notifications/postInvestigation.js';
 
 const SYSTEM_PROMPT = `You are a support investigation agent. Given a support ticket, use the available tools to gather all relevant information about the customer — their account details, subscription status, payment history, and previous tickets. Then provide a clear, concise summary of your findings to help the support team resolve the issue.`;
 
@@ -28,15 +30,8 @@ async function generateWithRetry(...args: Parameters<typeof genai.models.generat
 
 const MAX_TURNS = 6;
 
-interface Ticket {
-    id: string;
-    subject: string;
-}
+import { type Customer, type Ticket } from '../types/types.js';
 
-interface Customer {
-    email: string;
-    id: string;
-}
 
 export async function investigate(ticket: Ticket, customer: Customer) {
     let turns = 0;
@@ -94,7 +89,7 @@ export async function investigate(ticket: Ticket, customer: Customer) {
     const result = JSON.parse(finalResponse.text ?? '{}');
 
 
-    await prisma.investigation.create({
+    const investigation = await prisma.investigation.create({
         data: {
             ticketId: ticket.id,
             status: 'completed',
@@ -103,6 +98,16 @@ export async function investigate(ticket: Ticket, customer: Customer) {
             recommendedAction: result.recommendedAction,
         },
     });
+
+    try {
+        const message = formatInvestigationMessage({
+            ...investigation,
+            evidence: investigation.evidence as string[] | null,
+        }, ticket, customer);
+        await sendSlackMessage(process.env.SLACK_CHANNEL_ID!, message.blocks);
+    } catch (err) {
+        console.error('Slack post failed:', err);
+    }
 
     return result;
 }
