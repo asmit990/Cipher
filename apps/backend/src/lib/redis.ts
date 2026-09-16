@@ -1,3 +1,5 @@
+import 'dotenv/config';
+
 const redisUrl = process.env.REDIS_URL
     ? new URL(process.env.REDIS_URL)
     : null;

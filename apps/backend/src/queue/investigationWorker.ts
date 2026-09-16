@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { Worker } from "bullmq"
 import { redisConnection } from "../lib/redis.js"
 import { prisma } from "../lib/prisma.js"
@@ -5,7 +6,7 @@ import { investigate } from "../agents/investigate.js"
 
 
 
-const worker = new Worker('investigate', async (job) => {
+const worker = new Worker('investigation', async (job) => {
     const { ticketId } = job.data;
 
     const ticket = await prisma.supportTicket.findUnique({
@@ -31,7 +32,7 @@ const worker = new Worker('investigate', async (job) => {
 
 
     return investigate(ticket, ticket.customer);
-})
+}, { connection: redisConnection })
 
 
 worker.on('completed', (job) => console.log(`job ${job.id} completed`));
